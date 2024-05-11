@@ -1,0 +1,3 @@
+stable diffusion
+
+curl -X POST https://education-server-production.up.railway.app/stable-diffusion -H "Content-Type: application/json" -d '{"prompt": "An astronaut riding a rainbow unicorn, cinematic, dramatic"}'

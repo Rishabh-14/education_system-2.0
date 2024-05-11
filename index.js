@@ -3,7 +3,7 @@ import cors from "cors";
 import setupStableDiffusionRoute from "./image/stableDiffusionRoute.js";
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(cors()); // Enable CORS for all routes
 
