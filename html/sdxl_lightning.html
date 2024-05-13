@@ -1,0 +1,51 @@
+<!--
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SDXL Lightning Test</title>
+</head>
+<body>
+    <h1>SDXL Lightning Image Generation</h1>
+    <button onclick="fetchSDXL()">Generate Image</button>
+    <p id="result"></p>
+    <script>
+        async function fetchSDXL() {
+            try {
+                const response = await fetch('http://localhost:3001/sdxl-lightning', { method: 'POST' });
+                const data = await response.json();
+                document.getElementById('result').innerText = JSON.stringify(data);
+            } catch (error) {
+                document.getElementById('result').innerText = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SDXL Lightning Test</title>
+</head>
+<body>
+    <h1>SDXL Lightning Image Generation</h1>
+    <button onclick="fetchSDXL()">Generate Image</button>
+    <img id="resultImage" src="" alt="Generated Image" style="max-width: 100%;">
+    <p id="result"></p>
+    <script>
+        async function fetchSDXL() {
+            try {
+                const response = await fetch('http://localhost:3001/sdxl-lightning', { method: 'POST' });
+                const data = await response.json();
+                document.getElementById('resultImage').src = data.url;  // Assuming the response has a property 'url' with the image URL
+                document.getElementById('result').innerText = JSON.stringify(data);
+            } catch (error) {
+                document.getElementById('result').innerText = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
