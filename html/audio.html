@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Audio Streaming Test</title>
+</head>
+<body>
+    <h1>Audio Streaming from GPT-3.5 Turbo</h1>
+    <button onclick="fetchAudio()">Play Audio</button>
+    <audio id="audioPlayer" controls style="width: 100%;"></audio>
+    <script>
+        async function fetchAudio() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            try {
+                const response = await fetch('http://localhost:3001/audio');
+                if (!response.ok) throw new Error('Network response was not ok');
+                // Handle streaming directly without URL.createObjectURL
+                audioPlayer.src = 'http://localhost:3001/audio';
+                audioPlayer.load(); // Ensure the browser fetches the new source
+                audioPlayer.play();
+            } catch (error) {
+                console.error('Failed to fetch audio:', error);
+            }
+        }
+    </script>
+    
+</body>
+</html>
