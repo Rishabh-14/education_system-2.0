@@ -30,6 +30,7 @@ import setupLlavaRoute from "./image/llavaRoute.js";
 import setupSdxlLightningRoute from "./image/sdxlLightningRoute.js";
 import gptRouter from "./text/gptRoute.js";  // Make sure this is correctly imported
 import setupAudioRoute from "./audio/audioRoute.js";
+import generateStory from "./text/stream.js"; // Import the generateStory module
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -43,6 +44,7 @@ setupLlavaRoute(app);
 setupSdxlLightningRoute(app);
 app.use(gptRouter);  // Use the router middleware correctly
 setupAudioRoute(app)
+generateStory(app);
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
