@@ -16,6 +16,7 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
+/*
 const generateStory = (app) => {
   app.post("/generate-story", async (req, res) => {
     try {
@@ -55,5 +56,56 @@ const generateStory = (app) => {
     }
   });
 };
+*/
+/*
+const generateStory = (app) => {
+    app.post("/generate-story", async (req, res) => {
+      try {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [
+            { role: "system", content: "hi" },
+            { role: "user", content: req.body.prompt },  // Use user's prompt from request body
+          ],
+          stream: false,  // Assuming non-stream for simplicity
+        });
+  
+        res.json({ message: completion.choices[0].message.content });  // Send structured JSON response
+      } catch (error) {
+        console.error("Error generating story:", error);
+        res.status(500).json({ message: "Failed to generate story", error: error.toString() });
+      }
+    });
+  };
+  
+  export default generateStory;
+*/
 
-export default generateStory;
+const generateAudioStory = (app) => {
+    app.post("/generate-audio-story", async (req, res) => {
+      try {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [{ role: "system", content: "hi" }, { role: "user", content: req.body.prompt }],
+          stream: false,
+        });
+  
+        const text = completion.choices[0].message.content;
+  
+        // Assuming you have a function to convert text to audio stream
+        const audioStream = textToAudioStream(text); // This function needs to be implemented
+  
+        res.set({
+          "Content-Type": "audio/mpeg",
+          "Content-Disposition": "inline",
+        });
+  
+        audioStream.pipe(res); // Stream the audio directly to response
+      } catch (error) {
+        console.error("Error generating audio story:", error);
+        res.status(500).json({ message: "Failed to generate audio story", error: error.toString() });
+      }
+    });
+  };
+  
+  export default generateAudioStory;

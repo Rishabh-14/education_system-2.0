@@ -2,7 +2,7 @@
 import express from "express";
 import path from "path";
 
-import setupAudioRoute from "./audio/audioRoute.js"; // Import the refactored route
+import setupAudioRoute from "./audioRoute.js"; // Import the refactored route
 
 
 import cors from "cors";
