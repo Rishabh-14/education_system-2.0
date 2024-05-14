@@ -63,6 +63,8 @@ if (annyang) {
   document.getElementById("text").textContent = "Speech Recognition is not supported";
 }
 */
+
+/* Working
 if (annyang) {
   // Define the command for annyang
   var commands = {
@@ -87,6 +89,70 @@ if (annyang) {
               const audioPlayer = document.getElementById("audioPlayer");
               audioPlayer.src = audioURL;  // Set the audio element's source
               audioPlayer.play();  // Play the audio
+          } catch (error) {
+              document.getElementById("text").textContent = "Error processing your request";
+              console.error("Fetch error:", error);
+          }
+      },
+  };
+
+  // Add the commands to annyang
+  annyang.addCommands(commands);
+
+  // Start listening
+  annyang.start({ autoRestart: true, continuous: true });
+
+  // Debugging output
+  annyang.debug();
+
+  document.getElementById("text").textContent = "Speech recognition is enabled. Please speak.";
+} else {
+  document.getElementById("text").textContent = "Speech Recognition is not supported";
+}
+
+*/
+
+if (annyang) {
+  // Define the command for annyang
+  var commands = {
+      "*text": async function (transcript) {
+          document.getElementById("text").textContent = "Processing your input...";
+
+          try {
+              const response = await fetch("http://localhost:3001/audio", {
+                  method: "POST",
+                  headers: {
+                      "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ prompt: transcript }),
+              });
+
+              if (!response.ok) {
+                  throw new Error('Network response was not ok');
+              }
+
+              const audioPlayer = document.getElementById("audioPlayer");
+              const reader = response.body.getReader();
+              const stream = new ReadableStream({
+                  start(controller) {
+                      function push() {
+                          reader.read().then(({ done, value }) => {
+                              if (done) {
+                                  controller.close();
+                                  return;
+                              }
+                              controller.enqueue(value);
+                              push();
+                          });
+                      }
+
+                      push();
+                  }
+              });
+
+              const audioURL = URL.createObjectURL(new Blob([await new Response(stream).arrayBuffer()], { type: 'audio/mpeg' }));
+              audioPlayer.src = audioURL;
+              audioPlayer.play();
           } catch (error) {
               document.getElementById("text").textContent = "Error processing your request";
               console.error("Fetch error:", error);

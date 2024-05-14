@@ -1,3 +1,4 @@
+/*
 import express from "express";
 import { Readable } from "node:stream";
 import OpenAI from "openai";
@@ -50,6 +51,77 @@ const setupAudioRoute = (app) => {
 
       // Pipe PlayHT audio stream directly to the response
       audioStream.pipe(res);
+    } catch (error) {
+      console.error("Failed to stream audio:", error);
+      res.status(500).send("Failed to stream audio");
+    }
+  });
+};
+
+export default setupAudioRoute;
+*/
+
+import express from "express";
+import { Readable } from "stream";
+import OpenAI from "openai";
+import * as PlayHT from "playht";
+
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY, // Use environment variable for security
+});
+
+// Initialize PlayHT
+PlayHT.init({
+  apiKey: process.env.PLAYHT_API_KEY, // Use environment variable for security
+  userId: process.env.PLAYHT_USER_ID, // Use environment variable for security
+});
+
+const setupAudioRoute = (app) => {
+  app.post("/audio", async (req, res) => {
+    try {
+      const { prompt } = req.body;
+
+      if (!prompt) {
+        return res.status(400).send("Prompt is required");
+      }
+
+      res.set({
+        "Content-Type": "audio/mpeg",
+        "Transfer-Encoding": "chunked",
+      });
+
+      const chatGptResponseStream = await openai.chat.completions.create({
+        messages: [{ role: "user", content: prompt }],
+        model: "gpt-3.5-turbo",
+        stream: true,
+      });
+
+      const [responseStream1, _] = chatGptResponseStream.tee();
+
+      const textStream = new Readable({
+        async read() {
+          for await (const part of responseStream1) {
+            this.push(part.choices[0]?.delta?.content || "");
+          }
+          this.push(null);
+        },
+      });
+
+      const audioStream = await PlayHT.stream(textStream);
+
+      audioStream.on("data", (chunk) => {
+        res.write(chunk);
+      });
+
+      audioStream.on("end", () => {
+        res.end();
+      });
+
+      audioStream.on("error", (error) => {
+        console.error("Failed to stream audio:", error);
+        res.status(500).send("Failed to stream audio");
+      });
     } catch (error) {
       console.error("Failed to stream audio:", error);
       res.status(500).send("Failed to stream audio");
