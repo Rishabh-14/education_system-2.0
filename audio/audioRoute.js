@@ -2,29 +2,35 @@ import express from "express";
 import { Readable } from "node:stream";
 import OpenAI from "openai";
 import * as PlayHT from "playht";
+import dotenv from "dotenv"
 
-// Initialize OpenAI
+dotenv.config({ path: "../.env" });
+
 const openai = new OpenAI({
-  organization: "org-wPE92Eb5Vy76wMJfsvEGXaDf",
-  apiKey: "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",
+  apiKey: process.env.OPENAI_API_KEY, // Use environment variable for security
 });
 
-// Initialize PlayHT
 PlayHT.init({
-  apiKey: "df4fbd04fd7144b389988fb2eaf041bf",
-  userId: "pIrXpY8x7HXpxbATYZfR5HQgpLR2",
+  apiKey: process.env.PLAYHT_API_KEY, // Use environment variable for security
+  userId: process.env.PLAYHT_USER_ID, // Use environment variable for security
 });
 
 const setupAudioRoute = (app) => {
-  app.get("/audio", async (req, res) => {
+  app.post("/audio", async (req, res) => {
     try {
+      const { prompt } = req.body; // Extract the prompt from the request body
+
+      if (!prompt) {
+        return res.status(400).send("Prompt is required");
+      }
+
       res.set({
         "Content-Type": "audio/mpeg",
         "Transfer-Encoding": "chunked",
       });
 
       const chatGptResponseStream = await openai.chat.completions.create({
-        messages: [{ role: "user", content: "Tell me a joke." }],
+        messages: [{ role: "user", content: prompt }],
         model: "gpt-3.5-turbo",
         stream: true,
       });
