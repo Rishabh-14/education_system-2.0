@@ -49,6 +49,7 @@
 </html>
 -->
 
+<!--
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,6 +60,60 @@
 <body>
     <div id="text">Speech recognition is loading...</div>
     <audio id="audioPlayer" controls></audio>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+    <script src="annyang.js"></script>
+</body>
+</html>
+-->
+<!-- Working html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Playback</title>
+</head>
+<body>
+    <div id="text">Speech recognition is loading...</div>
+    <audio id="audioPlayer" controls></audio>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+    <script src="annyang.js"></script>
+    <script>
+        window.addEventListener('offline', () => {
+            document.getElementById("text").textContent = "Network offline. Pausing audio...";
+        });
+
+        window.addEventListener('online', () => {
+            document.getElementById("text").textContent = "Network online. Resuming audio...";
+        });
+    </script>
+</body>
+</html>
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Playback for Multiple Students</title>
+</head>
+<body>
+    <div id="text">Speech recognition is loading...</div>
+    <div id="students">
+        <div id="student-Alice">
+            <label>Audio for Alice: </label>
+            <audio id="audioPlayer-Alice" controls></audio>
+        </div>
+        <div id="student-Bob">
+            <label>Audio for Bob: </label>
+            <audio id="audioPlayer-Bob" controls></audio>
+        </div>
+        <div id="student-Charlie">
+            <label>Audio for Charlie: </label>
+            <audio id="audioPlayer-Charlie" controls></audio>
+        </div>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
     <script src="annyang.js"></script>
 </body>

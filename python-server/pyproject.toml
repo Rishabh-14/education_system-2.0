@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "python-server"
+version = "0.1.0"
+description = ""
+authors = ["Rishabh-14 <rishabhkharyal3@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+llama-index-llms-anthropic = "^0.1.11"
+python-dotenv = "^1.0.1"
+supabase = "^2.4.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
