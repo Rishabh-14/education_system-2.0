@@ -17,6 +17,7 @@
     "express": "^4.19.2",
     "openai": "^4.45.0",
     "playht": "^0.9.8",
-    "replicate": "^0.29.4"
+    "replicate": "^0.29.4",
+    "uuid": "^9.0.1"
   }
 }

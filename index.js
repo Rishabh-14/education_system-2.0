@@ -55,12 +55,18 @@ app.listen(port, () => {
 
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
+
 import setupStableDiffusionRoute from "./image/stableDiffusionRoute.js";
 import setupLlavaRoute from "./image/llavaRoute.js";
 import setupSdxlLightningRoute from "./image/sdxlLightningRoute.js";
 import gptRouter from "./text/gptRoute.js";
 import setupAudioRoute from "./audio/audioRoute.js";
 import generateAudioStory from "./text/stream.js"; // Ensure this is imported correctly
+import setupLearningPlanRoute from "./learning/learningPlanRoute.js";
+import setupAssessmentRoute from "./learning/assessmentRoute.js";
+
+dotenv.config(); 
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -75,6 +81,8 @@ setupSdxlLightningRoute(app);
 app.use(gptRouter); // Use the router middleware correctly
 setupAudioRoute(app);
 generateAudioStory(app); // Ensure the function is called with app
+setupLearningPlanRoute(app);
+setupAssessmentRoute(app);
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
