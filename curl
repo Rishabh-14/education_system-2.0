@@ -1,3 +1,14 @@
-stable diffusion
+1. Testing the /stable-diffusion route
 
-curl -X POST https://education-server-production.up.railway.app/stable-diffusion -H "Content-Type: application/json" -d '{"prompt": "An astronaut riding a rainbow unicorn, cinematic, dramatic"}'
+curl -X POST http://localhost:3000/stable-diffusion -H "Content-Type: application/json"
+2. Testing the /llava route
+
+curl -X POST http://localhost:3000/llava -H "Content-Type: application/json"
+3. Testing the /sdxl-lightning route
+curl -X POST http://localhost:3000/sdxl-lightning -H "Content-Type: application/json"
+
+4. Testing the /gpt route
+Here you'll need to send a JSON body with the transcript field. Replace "Your text here" with the actual text you want to process."
+curl -X POST http://localhost:3000/gpt -H "Content-Type: application/json" -d '{"transcript":"Your text here"}'
+
+Before you run these commands, make sure your server is running locally on port 3000, or adjust the 

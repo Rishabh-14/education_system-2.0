@@ -1,0 +1,207 @@
+<!--
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAI TTS</title>
+</head>
+<body>
+    <textarea id="textInput" placeholder="Enter text here..."></textarea>
+    <button onclick="submitText()">Submit</button>
+    <audio id="audioPlayer" controls></audio>
+
+    <script>
+      async function submitText() {
+        const textInput = document.getElementById('textInput').value;
+        await fetchTTS(textInput);
+      }
+
+      async function fetchTTS(text) {
+        try {
+          const response = await fetch('http://localhost:3001/tts', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+
+          const blob = await response.blob();
+          const audioURL = URL.createObjectURL(blob);
+          const audioPlayer = document.getElementById('audioPlayer');
+          audioPlayer.src = audioURL;
+          audioPlayer.play();
+        } catch (error) {
+          console.error('Fetch error:', error);
+        }
+      }
+    </script>
+</body>
+</html>
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAI TTS with Annyang</title>
+</head>
+<body>
+    <div id="text">Speech recognition is loading...</div>
+    <audio id="audioPlayer" controls></audio>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+    <script>
+        if (annyang) {
+            // Initialize and start annyang
+            initializeAnnyang();
+
+            // Update the UI to indicate that speech recognition is enabled
+            document.getElementById("text").textContent = "Speech recognition is enabled. Please speak.";
+        } else {
+            // Update the UI to indicate that speech recognition is not supported
+            document.getElementById("text").textContent = "Speech Recognition is not supported";
+        }
+
+        // Function to initialize annyang and define commands
+        function initializeAnnyang() {
+            var commands = {
+                "*text": async function (transcript) {
+                    document.getElementById("text").textContent = "Processing your input...";
+                    try {
+                        const response = await fetchWithRetry("http://localhost:3001/tts", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({ text: transcript }),
+                        }, 3); // Retry up to 3 times
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const audioPlayer = document.getElementById("audioPlayer");
+                        handleAudioStreaming(audioPlayer, response);
+                    } catch (error) {
+                        document.getElementById("text").textContent = "Error processing your request";
+                        console.error("Fetch error:", error);
+                    }
+                }
+            };
+
+            // Add the commands to annyang
+            annyang.addCommands(commands);
+
+            // Start listening
+            annyang.start({ autoRestart: true, continuous: true });
+
+            // Debugging output
+            annyang.debug();
+        }
+
+        // Function to handle fetch with retry logic
+        async function fetchWithRetry(url, options, retries) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    return await fetch(url, options);
+                } catch (error) {
+                    console.error(`Fetch attempt ${i + 1} failed:`, error);
+                    if (i < retries - 1) {
+                        await new Promise(res => setTimeout(res, 1000)); // Wait 1 second before retrying
+                    }
+                }
+            }
+            throw new Error('All fetch attempts failed');
+        }
+
+        // Function to handle audio streaming
+        function handleAudioStreaming(audioPlayer, response) {
+            const mediaSource = new MediaSource();
+            audioPlayer.src = URL.createObjectURL(mediaSource);
+
+            mediaSource.addEventListener('sourceopen', () => {
+                const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
+                const reader = response.body.getReader();
+                let chunks = [];
+                let lastReadPosition = 0;
+
+                const appendNextChunk = async ({ done, value }) => {
+                    if (done) {
+                        mediaSource.endOfStream();
+                        return;
+                    }
+
+                    chunks.push(value);
+                    sourceBuffer.appendBuffer(value);
+                    lastReadPosition += value.byteLength;
+
+                    await new Promise(resolve => sourceBuffer.addEventListener('updateend', resolve, { once: true }));
+
+                    reader.read().then(appendNextChunk).catch(async error => {
+                        console.error('Error reading stream:', error);
+                        await retryRead(reader, lastReadPosition, sourceBuffer, chunks); // Retry reading from last position
+                    });
+                };
+
+                reader.read().then(appendNextChunk).catch(async error => {
+                    console.error('Error reading stream:', error);
+                    await retryRead(reader, lastReadPosition, sourceBuffer, chunks); // Retry reading from last position
+                });
+
+                audioPlayer.addEventListener('error', () => {
+                    console.error('Audio playback error');
+                    // Implement retry or resume logic here
+                });
+
+                audioPlayer.play();
+            });
+
+            window.addEventListener('offline', () => {
+                console.log('Network offline detected');
+                audioPlayer.pause();
+            });
+
+            window.addEventListener('online', async () => {
+                console.log('Network online detected');
+                await retryRead(reader, lastReadPosition, sourceBuffer, chunks); // Resume reading from last position
+                audioPlayer.play();
+            });
+
+            audioPlayer.addEventListener('waiting', () => {
+                console.log('Audio buffering detected');
+                // Implement logic to handle buffering, if necessary
+            });
+        }
+
+        // Function to retry reading the stream from the last position
+        async function retryRead(reader, lastReadPosition, sourceBuffer, chunks) {
+            try {
+                await new Promise(res => setTimeout(res, 1000)); // Wait 1 second before retrying
+                const { done, value } = await reader.read();
+                if (done) {
+                    return;
+                }
+                chunks.push(value);
+                sourceBuffer.appendBuffer(value);
+                lastReadPosition += value.byteLength;
+
+                await new Promise(resolve => sourceBuffer.addEventListener('updateend', resolve, { once: true }));
+
+                reader.read().then(appendNextChunk).catch(async error => {
+                    console.error('Error reading stream:', error);
+                    await retryRead(reader, lastReadPosition, sourceBuffer, chunks); // Retry reading from last position
+                });
+            } catch (error) {
+                console.error('Retry read failed:', error);
+            }
+        }
+    </script>
+</body>
+</html>
