@@ -96,25 +96,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Playback for Multiple Students</title>
+    <title>OpenCV Face Detection and Audio</title>
+    <script async src="https://docs.opencv.org/master/opencv.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
 </head>
 <body>
-    <div id="text">Speech recognition is loading...</div>
-    
-    <div>
-        <h2>Alice</h2>
-        <audio id="audioPlayer-Alice" controls></audio>
-    </div>
-    <div>
-        <h2>Bob</h2>
-        <audio id="audioPlayer-Bob" controls></audio>
-    </div>
-    <div>
-        <h2>Charlie</h2>
-        <audio id="audioPlayer-Charlie" controls></audio>
-    </div>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
-    <script src="annyang.js"></script>
+    <video id="video" width="720" height="560" autoplay muted></video>
+    <img id="output" width="720" height="560" alt="Face Detection Output">
+    <div id="label"></div>
+    <div id="text">Speech recognition is enabled. Please speak.</div>
+    <audio id="teacherAudioPlayer" controls></audio>
+    <audio id="studentAudioPlayer1" controls></audio>
+    <audio id="studentAudioPlayer2" controls></audio>
+
+    <script src="script.js"></script>
 </body>
 </html>
