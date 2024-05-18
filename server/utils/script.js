@@ -682,154 +682,146 @@ document.addEventListener("DOMContentLoaded", () => {
     let faceDetected = true;
     let faceDetectionInitialized = false;
 
-    startVideo();
+    startVideo(video);
+    video.addEventListener('play', () => setInterval(() => detectFace(video, output, labelElement), 1000));
 
-    video.addEventListener('play', () => {
-        setInterval(detectFace, 1000); // Check every second
-    });
-
-    if (annyang) {
-        setupSpeechRecognition();
-    } else {
-        textElement.textContent = "Speech Recognition is not supported";
-    }
-
+    setupSpeechRecognition(textElement, teacherAudioPlayer);
     submitTextButton.addEventListener('click', () => {
         const textPrompt = textInput.value;
         callChatGPT(textPrompt, "text", textOutput);
     });
+});
 
-    async function startVideo() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            video.srcObject = stream;
-            console.log("Video and audio permissions granted.");
-        } catch (error) {
-            console.error("Error accessing media devices.", error);
-        }
+async function startVideo(video) {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        video.srcObject = stream;
+        console.log("Video and audio permissions granted.");
+    } catch (error) {
+        console.error("Error accessing media devices.", error);
     }
+}
 
-    async function detectFace() {
-        const imageData = captureFrame();
-        const result = await sendImageForDetection(imageData);
-        
-        if (result.image) {
-            updateOutput(result);
-            if (!result.faceDetected && faceDetected && faceDetectionInitialized) {
-                faceDetected = false;
-                console.log("Face not detected. Calling ChatGPT.");
-                await callChatGPT("What happened, Rishabh?", "audio", teacherAudioPlayer);
-            } else if (result.faceDetected) {
-                faceDetected = true;
-            }
-            faceDetectionInitialized = true;
+async function detectFace(video, output, labelElement) {
+    const imageData = captureFrame(video);
+    const result = await sendImageForDetection(imageData);
+    
+    if (result.image) {
+        updateOutput(result, output, labelElement);
+        await handleFaceDetection(result);
+    } else {
+        console.error('Error:', result.error);
+    }
+}
+
+function captureFrame(video) {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg').split(',')[1];
+}
+
+async function sendImageForDetection(imageData) {
+    const response = await fetch('http://localhost:3002/detect-face', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageData })
+    });
+    return await response.json();
+}
+
+function updateOutput(result, output, labelElement) {
+    output.src = `data:image/jpeg;base64,${result.image}`;
+    labelElement.textContent = result.label;
+}
+
+async function callChatGPT(prompt, mode, outputElement) {
+    try {
+        const response = await fetch(`http://localhost:3001/${mode}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ prompt: prompt }),
+        });
+
+        if (!response.ok) throw new Error('Network response was not ok');
+
+        if (mode === "audio") {
+            const audioURL = await getAudioStreamURL(response);
+            await playAudio(audioURL, outputElement);
+            await handleTeacherAudioCompletion(teacherAudioPlayer);
         } else {
-            console.error('Error:', result.error);
+            await streamTextResponse(response, outputElement);
         }
+    } catch (error) {
+        outputElement.textContent = "Error processing your request";
+        console.error("Fetch error:", error);
     }
+}
 
-    function captureFrame() {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const context = canvas.getContext('2d');
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        return canvas.toDataURL('image/jpeg').split(',')[1];
-    }
-
-    async function sendImageForDetection(imageData) {
-        const response = await fetch('http://localhost:3002/detect-face', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: imageData })
-        });
-        return await response.json();
-    }
-
-    function updateOutput(result) {
-        output.src = `data:image/jpeg;base64,${result.image}`;
-        labelElement.textContent = result.label;
-    }
-
-    async function callChatGPT(prompt, mode, outputElement) {
-        try {
-            const response = await fetch(`http://localhost:3001/${mode}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ prompt: prompt }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+async function getAudioStreamURL(response) {
+    const reader = response.body.getReader();
+    const stream = new ReadableStream({
+        start(controller) {
+            function push() {
+                reader.read().then(({ done, value }) => {
+                    if (done) {
+                        controller.close();
+                        return;
+                    }
+                    controller.enqueue(value);
+                    push();
+                });
             }
-
-            if (mode === "audio") {
-                const audioURL = await getAudioStreamURL(response);
-                await playAudio(audioURL, outputElement);
-            } else {
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder('utf-8');
-                let formattedText = '';
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    const chunk = decoder.decode(value, { stream: true });
-                    formattedText += chunk.replace(/["\\]/g, ''); // Format the chunk
-                    outputElement.textContent = formattedText;
-                }
-            }
-
-            if (outputElement === teacherAudioPlayer) {
-                console.log("Teacher finished speaking, selecting a random student to ask a question.");
-                const randomStudent = getRandomStudent();
-                console.log(`Random student selected: ${randomStudent.id}`);
-                setTimeout(async () => {
-                    await callChatGPT("Can you explain that further?", "audio", randomStudent);
-                }, Math.random() * 5000 + 5000); // Random interval between 5-10 seconds
-            }
-        } catch (error) {
-            textElement.textContent = "Error processing your request";
-            console.error("Fetch error:", error);
+            push();
         }
-    }
+    });
+    return URL.createObjectURL(new Blob([await new Response(stream).arrayBuffer()], { type: 'audio/ogg' }));
+}
 
-    async function getAudioStreamURL(response) {
-        const reader = response.body.getReader();
-        const stream = new ReadableStream({
-            start(controller) {
-                function push() {
-                    reader.read().then(({ done, value }) => {
-                        if (done) {
-                            controller.close();
-                            return;
-                        }
-                        controller.enqueue(value);
-                        push();
-                    });
-                }
-                push();
-            }
-        });
-        return URL.createObjectURL(new Blob([await new Response(stream).arrayBuffer()], { type: 'audio/ogg' }));
-    }
+function playAudio(audioURL, audioPlayer) {
+    return new Promise((resolve) => {
+        audioPlayer.src = audioURL;
+        audioPlayer.onended = resolve;
+        audioPlayer.play();
+    });
+}
 
-    function playAudio(audioURL, audioPlayer) {
-        return new Promise((resolve) => {
-            audioPlayer.src = audioURL;
-            audioPlayer.onended = () => {
-                resolve();
-            };
-            audioPlayer.play();
-        });
+async function streamTextResponse(response, outputElement) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let formattedText = '';
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        formattedText += chunk.replace(/["\\,]/g, ''); // Format the chunk
+        outputElement.textContent = formattedText;
     }
+}
 
-    function getRandomStudent() {
-        return studentAudioPlayers[Math.floor(Math.random() * studentAudioPlayers.length)];
-    }
+async function handleTeacherAudioCompletion(teacherAudioPlayer) {
+    console.log("Teacher finished speaking, selecting a random student to ask a question.");
+    const randomStudent = getRandomStudent();
+    console.log(`Random student selected: ${randomStudent.id}`);
+    setTimeout(async () => {
+        await callChatGPT("Can you explain that further?", "audio", randomStudent);
+    }, Math.random() * 5000 + 5000); // Random interval between 5-10 seconds
+}
 
-    function setupSpeechRecognition() {
+function getRandomStudent() {
+    const studentAudioPlayers = [
+        document.getElementById('studentAudioPlayer1'),
+        document.getElementById('studentAudioPlayer2')
+    ];
+    return studentAudioPlayers[Math.floor(Math.random() * studentAudioPlayers.length)];
+}
+
+function setupSpeechRecognition(textElement, teacherAudioPlayer) {
+    if (annyang) {
         const commands = {
             "*text": async function (transcript) {
                 console.log(`Recognized speech: ${transcript}`);
@@ -837,9 +829,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 await callChatGPT(transcript, "audio", teacherAudioPlayer);
             }
         };
-
         annyang.addCommands(commands);
         annyang.start({ autoRestart: true, continuous: true });
         annyang.debug();
+    } else {
+        textElement.textContent = "Speech Recognition is not supported";
     }
-});
+}
+
+async function handleFaceDetection(result) {
+    const teacherAudioPlayer = document.getElementById('teacherAudioPlayer');
+    let faceDetected = true;
+    let faceDetectionInitialized = false;
+
+    if (!result.faceDetected && faceDetected && faceDetectionInitialized) {
+        faceDetected = false;
+        console.log("Face not detected. Calling ChatGPT.");
+        await callChatGPT("What happened, Rishabh?", "audio", teacherAudioPlayer);
+    } else if (result.faceDetected) {
+        faceDetected = true;
+    }
+    faceDetectionInitialized = true;
+}
