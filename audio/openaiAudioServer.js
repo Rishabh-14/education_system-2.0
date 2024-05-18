@@ -215,10 +215,10 @@ const setupAudioRoute = (app) => {
   });
 };
 
-setupAudioRoute(app);
-
+export default setupAudioRoute
+/*
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
-
+*/
 

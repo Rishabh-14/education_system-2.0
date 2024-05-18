@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
 const app = express();
-const port = 3001;
+const port = 3002;
 
-import generateStory from "./generateStory.js";
+import generateStory from "./stream.js";
 
 app.use(cors());
 
