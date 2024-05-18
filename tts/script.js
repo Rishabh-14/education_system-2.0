@@ -506,7 +506,7 @@ document.addEventListener("DOMContentLoaded", () => {
         output.src = `data:image/jpeg;base64,${result.image}`;
         labelElement.textContent = result.label;
     }
-
+    /* random student speaking working
     async function callChatGPT(prompt, audioPlayer) {
         try {
             const response = await fetch("http://localhost:3001/audio", {
@@ -537,7 +537,37 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Fetch error:", error);
         }
     }
-
+    */
+    async function callChatGPT(prompt, audioPlayer) {
+        try {
+            const response = await fetch("http://localhost:3001/audio", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ prompt: prompt }),
+            });
+    
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+    
+            const audioURL = await getAudioStreamURL(response);
+            await playAudio(audioURL, audioPlayer);
+    
+            if (audioPlayer === teacherAudioPlayer) {
+                console.log("Teacher finished speaking, selecting a random person to ask a question.");
+                const randomPerson = getRandomPerson();
+                setTimeout(async () => {
+                    await askQuestionToPerson(randomPerson);
+                }, Math.random() * 5000 + 5000); // Random interval between 5-10 seconds
+            }
+        } catch (error) {
+            textElement.textContent = "Error processing your request";
+            console.error("Fetch error:", error);
+        }
+    }
+    
     async function getAudioStreamURL(response) {
         const reader = response.body.getReader();
         const stream = new ReadableStream({
@@ -571,6 +601,37 @@ document.addEventListener("DOMContentLoaded", () => {
     function getRandomStudent() {
         return studentAudioPlayers[Math.floor(Math.random() * studentAudioPlayers.length)];
     }
+    function getRandomQuestion() {
+        const questions = [
+            "Can you explain that further?",
+            "What do you think about this topic?",
+            "Do you have any questions?",
+            "Can you summarize what we discussed?"
+        ];
+        return questions[Math.floor(Math.random() * questions.length)];
+    }
+    
+    function getRandomPerson() {
+        const people = ["student", "teacher", "user"];
+        return people[Math.floor(Math.random() * people.length)];
+    }
+    
+    async function askQuestionToPerson(person) {
+        const question = getRandomQuestion();
+    
+        if (person === "teacher") {
+            console.log("Teacher is asking a question to a student or user.");
+            await callChatGPT(question, teacherAudioPlayer);
+        } else if (person === "student") {
+            const randomStudent = getRandomStudent();
+            console.log("Student is asking a question to the teacher.");
+            await callChatGPT(question, randomStudent);
+        } else if (person === "user") {
+            console.log("Teacher is asking a question to you.");
+            await callChatGPT(question, teacherAudioPlayer);
+        }
+    }
+    
 
     function setupSpeechRecognition() {
         const commands = {
