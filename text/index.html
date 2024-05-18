@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Text Streaming</title>
+</head>
+<body>
+    <h1>ChatGPT Text Streaming</h1>
+    <textarea id="textInput" placeholder="Enter text here..."></textarea>
+    <button onclick="submitText()">Submit</button>
+    <div id="output"></div>
+
+    <script>
+        async function submitText() {
+            const textInput = document.getElementById('textInput').value;
+            const outputDiv = document.getElementById('output');
+            outputDiv.textContent = '';
+
+            try {
+                const response = await fetch('http://localhost:3001/text', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: textInput }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value, { stream: true });
+                    outputDiv.textContent += chunk;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                outputDiv.textContent = 'Error processing your request';
+            }
+        }
+    </script>
+</body>
+</html>
