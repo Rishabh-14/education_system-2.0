@@ -402,6 +402,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Call ChatGPT and handle response based on mode (audio or text)
+    /*
     async function callChatGPT(prompt, mode) {
         try {
             const response = await fetch(`http://localhost:3001/${mode}`, {
@@ -437,6 +438,50 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Fetch error:", error);
         }
     }
+    */
+
+    // Call ChatGPT and handle response based on mode (audio or text)
+async function callChatGPT(prompt, mode) {
+    try {
+        const response = await fetch(`http://localhost:3001/${mode}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ prompt: prompt }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        if (mode === "audio") {
+            const audioURL = await getAudioStreamURL(response);
+            playAudio(audioURL);
+        } else {
+            await streamTextResponse(response.body);
+        }
+    } catch (error) {
+        textElement.textContent = "Error processing your request";
+        console.error("Fetch error:", error);
+    }
+}
+
+// Stream text response and update text output
+async function streamTextResponse(body) {
+    const reader = body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let formattedText = '';
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        formattedText += chunk.replace(/["\\,]/g, ''); // Format the chunk
+        textOutput.textContent = formattedText;
+    }
+}
 
     // Get audio stream URL
     async function getAudioStreamURL(response) {
@@ -483,10 +528,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Handle text input submission
+    /*
     submitTextButton.addEventListener('click', () => {
         const textPrompt = textInput.value;
         callChatGPT(textPrompt, "text");
     });
+    */
+   // Handle text input submission
+submitTextButton.addEventListener('click', () => {
+    const textPrompt = textInput.value;
+    textElement.textContent = "Processing your input...";
+    callChatGPT(textPrompt, "text");
+});
 
     startVideo();
     video.addEventListener('play', () => {
