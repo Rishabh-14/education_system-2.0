@@ -441,7 +441,7 @@ const setupAudioRoute = (app) => {
 
 export default setupAudioRoute;
 */
-
+/*
 import { Readable } from "stream";
 import OpenAI from "openai";
 import dotenv from "dotenv";
@@ -525,6 +525,76 @@ const setupAudioRoute = (app) => {
       }
 
       await processingPromise;
+
+      if (!res.writableEnded) {
+        res.end();
+      }
+    } catch (error) {
+      console.error("Failed to stream audio:", error);
+      if (!res.headersSent) {
+        res.status(500).send("Failed to stream audio");
+      }
+    }
+  });
+};
+
+export default setupAudioRoute;
+*/
+
+import express from "express";
+import openai from "./config/openaiClient.js";
+import { generateAndStreamAudio } from "./audioProcessing.js";
+
+const setupAudioRoute = (app) => {
+  const conversationHistories = new Map();
+
+  app.post("/audio", async (req, res) => {
+    try {
+      console.log("Request received:", req.body);
+
+      const { userId, prompt } = req.body;
+
+      if (!userId || !prompt) {
+        console.log("Missing userId or prompt");
+        return res.status(400).send("User ID and prompt are required");
+      }
+
+      // Retrieve or initialize conversation history for the user
+      const conversationHistory = conversationHistories.get(userId) || [];
+      conversationHistory.push({ role: "user", content: prompt });
+
+      res.set({
+        "Content-Type": "audio/ogg",
+        "Transfer-Encoding": "chunked",
+      });
+
+      // Stream the text response from OpenAI's GPT-3
+      const chatGptResponseStream = await openai.chat.completions.create({
+        messages: conversationHistory,
+        model: "gpt-3.5-turbo",
+        stream: true,
+      });
+
+      let accumulatedText = "";
+
+      // Read and process text chunks from the GPT-3 response
+      for await (const part of chatGptResponseStream) {
+        const textPart = part.choices[0]?.delta?.content || "";
+        if (textPart.trim()) {
+          accumulatedText += textPart;
+        }
+      }
+
+      if (accumulatedText.length === 0) {
+        throw new Error("No valid text content generated");
+      }
+
+      // Add the response to the conversation history
+      conversationHistory.push({ role: "assistant", content: accumulatedText });
+      conversationHistories.set(userId, conversationHistory);
+
+      // Generate and stream the audio from the accumulated text
+      await generateAndStreamAudio(accumulatedText, res);
 
       if (!res.writableEnded) {
         res.end();
