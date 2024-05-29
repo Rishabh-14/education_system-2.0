@@ -47,6 +47,7 @@ export async function listMessages(thread_id) {
   const threadMessages = await openai.beta.threads.messages.list(thread_id);
 
   console.log(threadMessages.data);
+  return threadMessages;
 }
 /*
 {
