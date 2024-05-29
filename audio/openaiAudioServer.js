@@ -500,29 +500,37 @@ export default setupAudioRoute;
 import { Readable } from "stream";
 import OpenAI from "openai";
 import dotenv from "dotenv";
+import express from "express";
+import bodyParser from "body-parser";
 
 dotenv.config();
+
+const app = express();
+app.use(bodyParser.json());
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, // Use environment variable for security
 });
 
-// Initialize an object to store conversation histories
-const conversationHistories = {};
-
 const setupAudioRoute = (app) => {
+  // Store conversation history in memory (consider a more persistent storage for production)
+  const conversationHistories = new Map();
+
   app.post("/audio", async (req, res) => {
     try {
-      const { prompt, chatId } = req.body;
+      console.log("Request received:", req.body);
 
-      if (!prompt || !chatId) {
-        return res.status(400).send("Prompt and chatId are required");
+      const { userId, prompt } = req.body;
+
+      if (!userId || !prompt) {
+        console.log("Missing userId or prompt");
+        return res.status(400).send("User ID and prompt are required");
       }
 
-      // Retrieve the conversation history for the given chat ID
-      const conversationHistory = conversationHistories[chatId] || [];
+      // Retrieve or initialize conversation history for the user
+      const conversationHistory = conversationHistories.get(userId) || [];
 
-      // Add the new user message to the conversation history
+      // Add the new prompt to the conversation history
       conversationHistory.push({ role: "user", content: prompt });
 
       res.set({
@@ -532,10 +540,7 @@ const setupAudioRoute = (app) => {
 
       // Stream the text response from OpenAI's GPT-3
       const chatGptResponseStream = await openai.chat.completions.create({
-        messages: [
-          { role: "system", content: "You are ChatGPT, a helpful assistant." },
-          ...conversationHistory,
-        ],
+        messages: conversationHistory,
         model: "gpt-3.5-turbo",
         stream: true,
       });
@@ -560,10 +565,10 @@ const setupAudioRoute = (app) => {
         throw new Error("No valid text content generated");
       }
 
-      // Add the assistant's response to the conversation history
+      // Add the response to the conversation history
       conversationHistory.push({ role: "assistant", content: accumulatedText });
-      // Update the conversation history for the given chat ID
-      conversationHistories[chatId] = conversationHistory;
+      // Save updated conversation history back to the map
+      conversationHistories.set(userId, conversationHistory);
 
       // Generate the audio from the accumulated text
       const audioResponse = await openai.audio.speech.create({
