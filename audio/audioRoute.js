@@ -616,7 +616,11 @@ export default setupAudioRoute;
 import express from "express";
 import openai from "./config/openaiClient.js";
 import { generateAndStreamAudio } from "./audioProcessing.js";
-import { streamResponse, addMessageToThread } from "./threads/threadHandler.js";
+import {
+  createThread,
+  streamResponse,
+  addMessageToThread,
+} from "./threads/threadHandler.js";
 
 const setupAudioRoute = (app) => {
   const conversationHistories = new Map();
@@ -633,8 +637,13 @@ const setupAudioRoute = (app) => {
       }
 
       // Retrieve or initialize conversation history for the user
-      const conversationHistory = conversationHistories.get(userId) || [];
-      conversationHistory.push({ role: "user", content: prompt });
+      let threadId = conversationHistories.get(userId);
+      if (!threadId) {
+        threadId = await createThread(prompt);
+        conversationHistories.set(userId, threadId);
+      } else {
+        await addMessageToThread(threadId, prompt);
+      }
 
       res.set({
         "Content-Type": "audio/ogg",
@@ -643,17 +652,12 @@ const setupAudioRoute = (app) => {
 
       // Stream the response from OpenAI's threads
       const assistantId = "asst_fiu9FIHvXmdJg4utCSGUoGEs"; // Replace with your actual assistant ID
-      const threadId = "thread_dEUuuaFn9uTh5TWME0VgliYf"; // Replace with your actual thread ID
 
       const accumulatedText = await streamResponse(threadId, assistantId);
 
       if (accumulatedText.length === 0) {
         throw new Error("No valid text content generated");
       }
-
-      // Add the response to the conversation history
-      conversationHistory.push({ role: "assistant", content: accumulatedText });
-      conversationHistories.set(userId, conversationHistory);
 
       // Generate and stream the audio from the accumulated text
       await generateAndStreamAudio(accumulatedText, res);

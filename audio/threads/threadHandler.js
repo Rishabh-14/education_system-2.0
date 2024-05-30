@@ -1,36 +1,20 @@
 import openai from "../config/openaiClient.js";
 
 const createAssistant = async () => {
-  // You can uncomment this block if you need to create a new assistant
-  /*
-  const assistant = await openai.beta.assistants.create({
-    model: "gpt-3.5-turbo",
-    name: "Teacher",
-    instructions:
-      "You are a teacher who teaches in such immersive way students don't want to leave the class",
-  });
-  console.log("assistant id", assistant.id);
-  return assistant.id;
-  */
   return "asst_fiu9FIHvXmdJg4utCSGUoGEs"; // Replace with your actual assistant ID
 };
 
-const createThread = async () => {
-  // You can uncomment this block if you need to create a new thread
-  /*
+const createThread = async (initialPrompt) => {
   const thread = await openai.beta.threads.create({
     messages: [
       {
         role: "user",
-        content:
-          "I need to solve the equation `3x + 11 = 14`. Can you help me?",
+        content: initialPrompt,
       },
     ],
   });
   console.log("thread id", thread.id);
   return thread.id;
-  */
-  return "thread_dEUuuaFn9uTh5TWME0VgliYf"; // Replace with your actual thread ID
 };
 
 const streamResponse = async (threadId, assistantId) => {
