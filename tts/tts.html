@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -22,3 +23,347 @@
     <audio id="audioPlayer3" controls></audio>
   </body>
 </html>
+=======
+<!--
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAI TTS</title>
+</head>
+<body>
+    <textarea id="textInput" placeholder="Enter text here..."></textarea>
+    <button onclick="submitText()">Submit</button>
+    <audio id="audioPlayer" controls></audio>
+
+    <script>
+      async function submitText() {
+        const textInput = document.getElementById('textInput').value;
+        await fetchTTS(textInput);
+      }
+
+      async function fetchTTS(text) {
+        try {
+          const response = await fetch('http://localhost:3001/tts', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+
+          const blob = await response.blob();
+          const audioURL = URL.createObjectURL(blob);
+          const audioPlayer = document.getElementById('audioPlayer');
+          audioPlayer.src = audioURL;
+          audioPlayer.play();
+        } catch (error) {
+          console.error('Fetch error:', error);
+        }
+      }
+    </script>
+</body>
+</html>
+-->
+
+<!-- Working with openai
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streaming Audio</title>
+</head>
+<body>
+    <button onclick="startRecognition()">Start Recognition</button>
+    <div id="text">Speech recognition is loading...</div>
+    <audio id="audioPlayer" controls></audio>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+    <script>
+        function startRecognition() {
+            if (annyang) {
+                initializeAnnyang();
+                document.getElementById("text").textContent = "Speech recognition is enabled. Please speak.";
+            } else {
+                document.getElementById("text").textContent = "Speech Recognition is not supported";
+            }
+        }
+
+        function initializeAnnyang() {
+            var commands = {
+                "*text": async function (transcript) {
+                    document.getElementById("text").textContent = "Processing your input...";
+                    try {
+                        const response = await fetch("http://localhost:3001/audio", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({ prompt: transcript }),
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const audioPlayer = document.getElementById("audioPlayer");
+                        const mediaSource = new MediaSource();
+                        audioPlayer.src = URL.createObjectURL(mediaSource);
+
+                        mediaSource.addEventListener('sourceopen', () => {
+                            const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
+                            const reader = response.body.getReader();
+                            const chunkQueue = [];
+
+                            const processQueue = async () => {
+                                if (chunkQueue.length > 0 && !sourceBuffer.updating) {
+                                    sourceBuffer.appendBuffer(chunkQueue.shift());
+                                }
+                            };
+
+                            sourceBuffer.addEventListener('updateend', processQueue);
+
+                            const read = async () => {
+                                try {
+                                    const { done, value } = await reader.read();
+                                    if (done) {
+                                        mediaSource.endOfStream();
+                                        console.log("Stream ended");
+                                        return;
+                                    }
+                                    chunkQueue.push(value);
+                                    processQueue();
+                                    read();
+                                } catch (error) {
+                                    console.error('Error reading stream:', error);
+                                }
+                            };
+
+                            read();
+                        });
+
+                        audioPlayer.play().catch(error => {
+                            console.error('Error playing audio:', error);
+                        });
+                    } catch (error) {
+                        document.getElementById("text").textContent = "Error processing your request";
+                        console.error("Fetch error:", error);
+                    }
+                }
+            };
+
+            annyang.addCommands(commands);
+            annyang.start({ autoRestart: true, continuous: true });
+            annyang.debug();
+        }
+    </script>
+</body>
+</html>
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Streaming Audio</title>
+  </head>
+  <body>
+    <button onclick="startRecognition()">Start Recognition</button>
+    <div id="text">Speech recognition is loading...</div>
+    <audio id="audioPlayer" controls></audio>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+    <script>
+      let isPausedDueToInterrupt = false;
+      let currentReader = null;
+      let currentSourceBuffer = null;
+      let chunkQueue = [];
+
+      function startRecognition() {
+        if (annyang) {
+          initializeAnnyang();
+          document.getElementById("text").textContent =
+            "Speech recognition is enabled. Please speak.";
+        } else {
+          document.getElementById("text").textContent =
+            "Speech Recognition is not supported";
+        }
+      }
+
+      function initializeAnnyang() {
+        var commands = {
+          "*text": async function (transcript) {
+            document.getElementById("text").textContent =
+              "Processing your input...";
+            try {
+              const response = await fetchWithRetry(
+                "http://localhost:3001/audio",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ prompt: transcript }),
+                },
+                3
+              ); // Retry up to 3 times
+
+              if (!response.ok) {
+                throw new Error("Network response was not ok");
+              }
+
+              const audioPlayer = document.getElementById("audioPlayer");
+              const mediaSource = new MediaSource();
+              audioPlayer.src = URL.createObjectURL(mediaSource);
+
+              mediaSource.addEventListener("sourceopen", () => {
+                const sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
+                currentSourceBuffer = sourceBuffer;
+                const reader = response.body.getReader();
+                currentReader = reader;
+                chunkQueue = [];
+
+                const processQueue = async () => {
+                  if (chunkQueue.length > 0 && !sourceBuffer.updating) {
+                    sourceBuffer.appendBuffer(chunkQueue.shift());
+                  }
+                };
+
+                sourceBuffer.addEventListener("updateend", processQueue);
+
+                const read = async () => {
+                  try {
+                    const { done, value } = await reader.read();
+                    if (done) {
+                      mediaSource.endOfStream();
+                      console.log("Stream ended");
+                      return;
+                    }
+                    chunkQueue.push(value);
+                    processQueue();
+                    read();
+                  } catch (error) {
+                    console.error("Error reading stream:", error);
+                  }
+                };
+
+                read();
+              });
+
+              audioPlayer.play().catch((error) => {
+                console.error("Error playing audio:", error);
+              });
+            } catch (error) {
+              document.getElementById("text").textContent =
+                "Error processing your request";
+              console.error("Fetch error:", error);
+            }
+          },
+        };
+
+        annyang.addCommands(commands);
+        annyang.start({ autoRestart: true, continuous: true });
+        annyang.debug();
+      }
+
+      async function fetchWithRetry(url, options, retries) {
+        for (let i = 0; i < retries; i++) {
+          try {
+            return await fetch(url, options);
+          } catch (error) {
+            console.error(`Fetch attempt ${i + 1} failed:`, error);
+            if (i < retries - 1) {
+              await new Promise((res) => setTimeout(res, 1000)); // Wait 1 second before retrying
+            }
+          }
+        }
+        throw new Error("All fetch attempts failed");
+      }
+
+      function handleAudioStreaming(audioPlayer, response) {
+        const mediaSource = new MediaSource();
+        audioPlayer.src = URL.createObjectURL(mediaSource);
+
+        mediaSource.addEventListener("sourceopen", () => {
+          const sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
+          currentSourceBuffer = sourceBuffer;
+          const reader = response.body.getReader();
+          currentReader = reader;
+          chunkQueue = [];
+
+          const processQueue = async () => {
+            if (chunkQueue.length > 0 && !sourceBuffer.updating) {
+              sourceBuffer.appendBuffer(chunkQueue.shift());
+            }
+          };
+
+          sourceBuffer.addEventListener("updateend", processQueue);
+
+          const read = async () => {
+            try {
+              const { done, value } = await reader.read();
+              if (done) {
+                mediaSource.endOfStream();
+                console.log("Stream ended");
+                return;
+              }
+              chunkQueue.push(value);
+              processQueue();
+              read();
+            } catch (error) {
+              console.error("Error reading stream:", error);
+            }
+          };
+
+          read();
+        });
+
+        audioPlayer.play().catch((error) => {
+          console.error("Error playing audio:", error);
+        });
+      }
+
+      window.addEventListener("offline", () => {
+        console.log("Network offline detected");
+        isPausedDueToInterrupt = true;
+        document.getElementById("audioPlayer").pause();
+      });
+
+      window.addEventListener("online", async () => {
+        console.log("Network online detected");
+        if (isPausedDueToInterrupt) {
+          isPausedDueToInterrupt = false;
+          await retryRead(currentReader, currentSourceBuffer); // Resume reading from the last position
+          document.getElementById("audioPlayer").play();
+        }
+      });
+
+      async function retryRead(reader, sourceBuffer) {
+        try {
+          await new Promise((res) => setTimeout(res, 1000)); // Wait 1 second before retrying
+          const { done, value } = await reader.read();
+          if (done) {
+            return;
+          }
+          chunkQueue.push(value);
+          processQueue(sourceBuffer);
+          retryRead(reader, sourceBuffer); // Continue reading from the last position
+        } catch (error) {
+          console.error("Retry read failed:", error);
+        }
+      }
+
+      function processQueue(sourceBuffer) {
+        if (chunkQueue.length > 0 && !sourceBuffer.updating) {
+          sourceBuffer.appendBuffer(chunkQueue.shift());
+        }
+      }
+    </script>
+  </body>
+</html>
+>>>>>>> Stashed changes

@@ -66,7 +66,7 @@ import generateAudioStory from "./text/stream.js"; // Ensure this is imported co
 import setupLearningPlanRoute from "./learning/learningPlanRoute.js";
 import setupAssessmentRoute from "./learning/assessmentRoute.js";
 
-dotenv.config(); 
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
