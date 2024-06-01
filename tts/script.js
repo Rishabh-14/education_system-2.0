@@ -1,3 +1,5 @@
+// tts/script.js
+
 document.addEventListener("DOMContentLoaded", () => {
   const video = document.getElementById("video");
   const output = document.getElementById("output");
