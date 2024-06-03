@@ -2,6 +2,8 @@
 
 import OpenAI from "openai";
 import dotenv from "dotenv";
+import { readFileAsync } from "./async_read.js";
+
 dotenv.config({ path: "../.env" });
 
 const openai = new OpenAI({
@@ -9,9 +11,19 @@ const openai = new OpenAI({
 });
 
 export async function createAssistant(role) {
+  let additionalData = "";
+
+  if (role === "teacher") {
+    try {
+      additionalData = await readFileAsync("./tts/Mr_Ranedeer.txt"); // Adjust the path as necessary
+    } catch (err) {
+      console.error("Failed to read teacher data:", err);
+    }
+  }
+
   const instructions =
     role === "teacher"
-      ? `You are a teacher. Provide educational content and answer should be in a format "[teacher]: your speech"`
+      ? `You are a teacher. Provide educational content and answer should be in a format "[teacher]: your speech.Use the following to enhance learning style ${additionalData}"`
       : `You are a student. repeat the last message just said and tell a joke about it by laughing and answer should be of format "[student] : your answer"`;
 
   const assistant = await openai.beta.assistants.create({
