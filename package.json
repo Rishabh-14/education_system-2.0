@@ -5,6 +5,7 @@
   "main": "image.js",
   "type": "module",
   "scripts": {
+    "start": "node index.js",
     "test": "jest"
   },
   "keywords": [],

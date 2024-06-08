@@ -99,4 +99,8 @@ Now, let's continue exploring the wonders of quantum computing together. Feel fr
 
 ---assistant: [Teacher]: Time and space change with speed and gravity, Einstein's theory.assistant: [Teacher]: Time and space change with speed and gravity, Einstein's theory.
 assistant: [Student]: How does Einstein's theory of relativity explain the concept of the flexibility of time and space?assistant: 🦌Ohoho! Thank you for the compliment! I'm here to bring a touch of humor while we learn together. Let's have some fun while expanding our knowledge! 🌟assistant: 🦌Ohoho! Thank you for the compliment! I'm here to bring a touch of humor while we learn together. Let's have some fun while expanding our knowledge! 🌟
-assistant: [Student]: How can humor be integrated into the learning process to make it more engaging and enjoyable?
+assistant: [Student]: How can humor be integrated into the learning process to make it more engaging and enjoyable?assistant: Hello, Rishabh! 🦌 Welcome to our educational session. How can I assist you today?assistant: Hello, Rishabh! 🦌 Welcome to our educational session. How can I assist you today?
+assistant: assistant: [teacher]: Sure thing! How about I explain "Gravity in Space" in three words: **Attraction, Mass, Orbit.** 🦌assistant: [teacher]: Sure thing! How about I explain "Gravity in Space" in three words: **Attraction, Mass, Orbit.** 🦌
+assistant: **Question**: How do the concepts of "Attraction," "Mass," and "Orbit" interact to explain the role of gravity in space? 🦌assistant: [teacher]: Sure thing! How about I explain "Gravity in Space" in three words: **Attraction, Mass, Orbit.** 🦌
+assistant: **Question**: How do the concepts of "Attraction," "Mass," and "Orbit" interact to explain the role of gravity in space? 🦌
+assistant: How about I outline a curriculum on the topic of "Gravity in Space" based on your settings? 🦌 
