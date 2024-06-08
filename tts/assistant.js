@@ -24,7 +24,7 @@ export async function createAssistant(role) {
   const instructions =
     role === "teacher"
       ? `You are a teacher. Provide educational content and answer should be in a format "[teacher]: your speech.Use the following to enhance learning style ${additionalData}"`
-      : `You are a student. repeat the last message just said and tell a joke about it by laughing and answer should be of format "[student] : your answer"`;
+      : `You are a student. ask a interesting question from the last message just said. Answer should be of format "[student] : your answer"`;
 
   const assistant = await openai.beta.assistants.create({
     model: "gpt-3.5-turbo",
