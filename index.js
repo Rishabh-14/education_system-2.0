@@ -97,11 +97,11 @@ import setupLlavaRoute from "./image/llavaRoute.js";
 import setupSdxlLightningRoute from "./image/sdxlLightningRoute.js";
 import gptRouter from "./text/gptRoute.js";
 import setupAudioRoute from "./audio/openaiAudioServer.js";
-import generateAudioStory from "./text/stream.js"; 
+import generateAudioStory from "./text/stream.js";
 import setupLearningPlanRoute from "./learning/learningPlanRoute.js";
 import setupAssessmentRoute from "./learning/assessmentRoute.js";
 
-dotenv.config(); 
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -109,17 +109,24 @@ const port = process.env.PORT || 3001;
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Middleware to parse JSON bodies
 
+app.get("/config", (req, res) => {
+  res.json({
+    apiUrl:
+      process.env.NODE_ENV === "production"
+        ? process.env.RAILWAY_URL
+        : process.env.LOCAL_URL,
+  });
+});
 // Setup routes
 setupStableDiffusionRoute(app);
 setupLlavaRoute(app);
 setupSdxlLightningRoute(app);
-app.use(gptRouter); 
+app.use(gptRouter);
 setupAudioRoute(app);
 generateAudioStory(app);
 setupLearningPlanRoute(app);
 setupAssessmentRoute(app);
 
-
 app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
+  console.log(`Server listening on port ${port}`);
 });

@@ -3,7 +3,7 @@ import axios from "axios";
 async function getChatResponse() {
   try {
     const response = await axios.post(
-      "http://localhost:3000/chat",
+      `${apiUrl}/chat`,
       {
         chatId: "chatcmpl-9T4GEG1ivDOwREw78fNtXZvDhc72c",
         message: "How do I retrieve the whole conversation?",

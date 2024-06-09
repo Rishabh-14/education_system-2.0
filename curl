@@ -1,6 +1,6 @@
 1. Testing the /stable-diffusion route
 
-curl -X POST http://localhost:3000/stable-diffusion -H "Content-Type: application/json"
+curl -X POST http://localhost:3001/stable-diffusion -H "Content-Type: application/json"
 2. Testing the /llava route
 
 curl -X POST http://localhost:3000/llava -H "Content-Type: application/json"

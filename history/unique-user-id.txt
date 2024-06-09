@@ -103,4 +103,8 @@ assistant: [Student]: How can humor be integrated into the learning process to m
 assistant: assistant: [teacher]: Sure thing! How about I explain "Gravity in Space" in three words: **Attraction, Mass, Orbit.** 🦌assistant: [teacher]: Sure thing! How about I explain "Gravity in Space" in three words: **Attraction, Mass, Orbit.** 🦌
 assistant: **Question**: How do the concepts of "Attraction," "Mass," and "Orbit" interact to explain the role of gravity in space? 🦌assistant: [teacher]: Sure thing! How about I explain "Gravity in Space" in three words: **Attraction, Mass, Orbit.** 🦌
 assistant: **Question**: How do the concepts of "Attraction," "Mass," and "Orbit" interact to explain the role of gravity in space? 🦌
-assistant: How about I outline a curriculum on the topic of "Gravity in Space" based on your settings? 🦌 
+assistant: How about I outline a curriculum on the topic of "Gravity in Space" based on your settings? 🦌 assistant: Hello Rishabh! 🦌 How can I assist you today?assistant: Hello Rishabh! 🦌 How can I assist you today?
+assistant: Feel free to ask any question that comes to mind based on the last response.assistant: Hello Rishabh! 🦌 How can I assist you today?
+assistant: Feel free to ask any question that comes to mind based on the last response.
+assistant: [student] : What are some interesting ways to approach problem-solving tasks as a student?assistant: Hello Rishabh! 🦌 Welcome to our educational platform. How can I assist you today?assistant: Hello Rishabh! 🦌 Welcome to our educational platform. How can I assist you today?
+assistant: Could you please provide me with more details on how I can assist you today?
