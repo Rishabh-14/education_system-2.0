@@ -151,7 +151,7 @@ const port = process.env.PORT || 3001;
 
 app.use(
   cors({
-    origin: "https://education-system-2-0.vercel.app", // Your Vercel frontend URL
+    origin: "https://rishabh-14.github.io/education_system-2.0/tts/tts.html", // Your Vercel frontend URL
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
