@@ -131,7 +131,7 @@ app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
 */
-
+/*
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -153,6 +153,62 @@ app.use(cors());
 
 app.use(express.json()); // Middleware to parse JSON bodies
 app.options("*", cors()); // Handle preflight requests
+
+app.get("/config", (req, res) => {
+  res.json({
+    apiUrl:
+      process.env.NODE_ENV === "production"
+        ? process.env.RAILWAY_URL
+        : process.env.LOCAL_URL,
+  });
+});
+
+// Setup routes
+setupStableDiffusionRoute(app);
+setupLlavaRoute(app);
+setupSdxlLightningRoute(app);
+app.use(gptRouter);
+setupAudioRoute(app);
+generateAudioStory(app);
+setupLearningPlanRoute(app);
+setupAssessmentRoute(app);
+
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
+});
+
+export default app;
+*/
+
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import setupStableDiffusionRoute from "./image/stableDiffusionRoute.js";
+import setupLlavaRoute from "./image/llavaRoute.js";
+import setupSdxlLightningRoute from "./image/sdxlLightningRoute.js";
+import gptRouter from "./text/gptRoute.js";
+import setupAudioRoute from "./audio/openaiAudioServer.js";
+import generateAudioStory from "./text/stream.js";
+import setupLearningPlanRoute from "./learning/learningPlanRoute.js";
+import setupAssessmentRoute from "./learning/assessmentRoute.js";
+
+dotenv.config();
+
+const app = express();
+const port = process.env.PORT || 3001;
+
+// CORS configuration to allow requests from your GitHub Pages site
+const corsOptions = {
+  origin: "https://rishabh-14.github.io",
+  methods: "GET,POST,PUT,DELETE,OPTIONS",
+  allowedHeaders: "Content-Type,Authorization",
+};
+
+app.use(cors(corsOptions));
+app.use(express.json()); // Middleware to parse JSON bodies
+
+// Handle preflight requests
+app.options("*", cors(corsOptions));
 
 app.get("/config", (req, res) => {
   res.json({
