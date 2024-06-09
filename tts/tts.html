@@ -1,5 +1,6 @@
 <!-- tts/index.js -->
 
+<!--
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -19,6 +20,126 @@
     <img id="output" width="720" height="560" alt="Face Detection Output" />
     <div id="label">Looking at the screen</div>
     <div id="text">Speech recognition is enabled. Please speak.</div>
+    <audio id="audioPlayer1" controls></audio>
+    <audio id="audioPlayer2" controls></audio>
+    <audio id="audioPlayer3" controls></audio>
+  </body>
+</html>
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenCV Face Detection and Audio</title>
+
+    <!-- OpenCV JavaScript Library -->
+    <script
+      async
+      src="https://docs.opencv.org/master/opencv.js"
+      type="text/javascript"
+    ></script>
+
+    <!-- Annyang Speech Recognition Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+
+    <!-- Custom Script -->
+    <script src="script.js" defer></script>
+
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Custom Styles -->
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+        background-color: #f4f4f9;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        color: #333;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        color: #007bff;
+        margin-bottom: 20px;
+      }
+
+      #video,
+      #output {
+        border: 3px solid #007bff;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        max-width: 100%;
+      }
+
+      #label,
+      #text {
+        background-color: #007bff;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        max-width: 90%;
+        transition: background-color 0.3s ease;
+      }
+
+      #label:hover,
+      #text:hover {
+        background-color: #0056b3;
+      }
+
+      audio {
+        margin: 10px;
+        max-width: 90%;
+      }
+
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 2rem;
+        }
+
+        #video,
+        #output {
+          width: 100%;
+          height: auto;
+        }
+
+        #label,
+        #text,
+        audio {
+          padding: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>OpenCV Face Detection and Audio</h1>
+
+    <!-- Video Element for Face Detection -->
+    <video id="video" width="720" height="560" autoplay muted></video>
+
+    <!-- Image Element for Face Detection Output -->
+    <img id="output" width="720" height="560" alt="Face Detection Output" />
+
+    <!-- Label for Face Detection Status -->
+    <div id="label">Looking at the screen</div>
+
+    <!-- Text for Speech Recognition Status -->
+    <div id="text">Speech recognition is enabled. Please speak.</div>
+
+    <!-- Audio Controls -->
     <audio id="audioPlayer1" controls></audio>
     <audio id="audioPlayer2" controls></audio>
     <audio id="audioPlayer3" controls></audio>
