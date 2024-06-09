@@ -149,13 +149,7 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3001;
 
-app.use(
-  cors({
-    origin: "https://rishabh-14.github.io/education_system-2.0/tts/tts.html", // Your Vercel frontend URL
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use(cors());
 
 app.use(express.json()); // Middleware to parse JSON bodies
 app.options("*", cors()); // Handle preflight requests
