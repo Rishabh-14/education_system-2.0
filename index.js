@@ -149,17 +149,11 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3001;
 
-const allowedOrigins = [
-  "http://localhost:3000", // Local development
-  "https://education-system-2-0.vercel.app", // Replace with your Vercel domain
-];
-
 app.use(
   cors({
-    origin: allowedOrigins,
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true,
-    optionsSuccessStatus: 204,
+    origin: "https://education-system-2-0.vercel.app", // Your Vercel frontend URL
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
