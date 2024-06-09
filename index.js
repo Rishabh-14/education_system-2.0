@@ -164,6 +164,7 @@ app.use(
 );
 
 app.use(express.json()); // Middleware to parse JSON bodies
+app.options("*", cors()); // Handle preflight requests
 
 app.get("/config", (req, res) => {
   res.json({
