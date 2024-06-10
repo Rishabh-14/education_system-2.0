@@ -199,7 +199,7 @@ const port = process.env.PORT || 3001;
 
 // CORS configuration to allow requests from your GitHub Pages site
 const corsOptions = {
-  origin: "https://rishabh-14.github.io",
+  origin: ["http://localhost:5174", "https://rishabh-14.github.io"],
   methods: "GET,POST,PUT,DELETE,OPTIONS",
   allowedHeaders: "Content-Type,Authorization",
 };
